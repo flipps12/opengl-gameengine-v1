@@ -1,0 +1,14 @@
+{
+  "mapa1": [
+    ["aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "ladrillo", "ladrillo", "ladrillo"],
+    ["aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "ladrillo"],
+    ["aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "ladrillo"],
+    ["aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "ladrillo"],
+    ["aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "ladrillo"],
+    ["aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "ladrillo"],
+    ["aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "ladrillo", "ladrillo", "ladrillo"],
+    ["aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "aire", "ladrillo-izquierda", "ladrillo", "ladrillo", "ladrillo"],
+    ["pasto", "pasto", "pasto", "pasto", "pasto", "pasto", "pasto", "pasto", "pasto", "pasto", "pasto", "pasto", "pasto", "pasto", "pasto", "pasto", "pasto", "pasto", "pasto", "pasto"],
+    ["tierra", "tierra", "tierra", "tierra", "tierra", "tierra", "tierra", "tierra", "tierra", "tierra", "tierra", "tierra", "tierra", "tierra", "tierra", "tierra", "tierra", "tierra", "tierra", "tierra"]
+  ]
+}

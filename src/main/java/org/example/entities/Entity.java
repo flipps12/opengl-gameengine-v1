@@ -11,7 +11,7 @@ import static org.lwjgl.opengl.GL11.*;
 @Setter
 @Getter
 public class Entity {
-    private Long id;
+    private int id;
     private float x, y;
     private float width, height;
     private float r, g, b;
@@ -56,10 +56,10 @@ public class Entity {
     }
 
     public int isColliding(EntityNoMove player) {
-        boolean colliding = this.x < player.getX() + player.getWidth() &&
-                this.x + this.width > player.getX() &&
-                this.y < player.getY() + player.getHeight() &&
-                this.y + this.height > player.getY();
+        boolean colliding = this.x < player.getX() + player.getWidth() -1 &&
+                this.x + this.width > player.getX() - 1 &&
+                this.y < player.getY() + player.getHeight() -1 &&
+                this.y + this.height > player.getY() -1;
 
         if (!colliding) {
             return 0; // No hay colisión
@@ -84,19 +84,19 @@ public class Entity {
         return 0;
     }
 
-    public void CollisionBottom(boolean b, Long id) {
+    public void CollisionBottom(boolean b, int id) {
         this.CollisionBottom = new CollisionData(b, id);
     }
 
-    public void CollisionTop(boolean b, Long id) {
+    public void CollisionTop(boolean b, int id) {
         this.CollisionTop = new CollisionData(b, id);
     }
 
-    public void CollisionLeft(boolean b, Long id) {
+    public void CollisionLeft(boolean b, int id) {
         this.CollisionLeft = new CollisionData(b, id);
     }
 
-    public void CollisionRight(boolean b, Long id) {
+    public void CollisionRight(boolean b, int id) {
         this.CollisionRight = new CollisionData(b, id);
     }
 }

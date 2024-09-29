@@ -2,8 +2,6 @@ package org.example;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL12;
-import org.lwjgl.stb.STBImage;
-import org.lwjgl.system.MemoryStack;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;

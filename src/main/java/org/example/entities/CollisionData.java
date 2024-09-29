@@ -9,9 +9,9 @@ import lombok.Setter;
 @Setter
 public class CollisionData {
     private final boolean status;
-    private final Long id;
+    private final int id;
 
-    public CollisionData(boolean b, Long id) {
+    public CollisionData(boolean b, int id) {
         this.status = b;
         this.id = id;
     }

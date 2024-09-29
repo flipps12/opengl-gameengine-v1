@@ -2,14 +2,17 @@ package org.example.Window;
 
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.example.MapLoader;
 import org.example.entities.Entity;
 import org.example.entities.EntityNoMove;
+import org.json.JSONArray;
 import org.lwjgl.*;
 import org.lwjgl.glfw.*;
 import org.lwjgl.opengl.*;
 import org.lwjgl.system.*;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.nio.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,23 +34,25 @@ public class HelloWorld {
     Integer H_SCREEN = 900;
 
     // Constante de gravedad y fuerza de salto
-    final float GRAVEDAD = -4f; //-9.8f;
-    final float FUERZA_SALTO = 10.0f;
+    final float GRAVEDAD = -18f; //-9.8f;
+    final float FUERZA_SALTO = 37.0f;
 
     // Variables del objeto
     float posicionY = 0;
-    float velocidadVertical = -4;
+    float velocidadVertical = -10;
 
 
     float deltaTime = 0.032f; // Supongamos 60 FPS 0.016
 
+    // pj config
+    int saltos = 0;
+
     // The window handle
     private long window;
-    private List<Entity> entities;
     private List<EntityNoMove> entitiesNo;
     private boolean upPressed, downPressed, leftPressed, rightPressed;
 
-    public void run() throws IOException {
+    public void run() throws Exception {
         System.out.println("Hello LWJGL " + Version.getVersion() + "!");
 
         init();
@@ -63,7 +68,12 @@ public class HelloWorld {
 
     }
 
-    private void init() {
+    private void init() throws Exception {
+        // Entidades
+        entitiesNo = new ArrayList<>();
+
+        String[][] mapa = MapLoader.convertToArray(MapLoader.loadMap("src/main/resources/mapas/maps.json").getJSONArray("mapa1"));
+
         GLFWErrorCallback.createPrint(System.err).set();
 
         if (!glfwInit())
@@ -80,8 +90,14 @@ public class HelloWorld {
         glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
             boolean isPressed = action != GLFW_RELEASE;
             switch (key) {
-                case GLFW_KEY_W:
+                case GLFW_KEY_SPACE:
+                    if (saltos > 2) break;
                     upPressed = isPressed;
+                    velocidadVertical = FUERZA_SALTO;
+                    posicionY -= velocidadVertical * deltaTime;
+                    entity.setY(posicionY);
+                    entity.CollisionBottom(false, 1);
+                    saltos++;
                     break;
                 case GLFW_KEY_S:
                     downPressed = isPressed;
@@ -129,19 +145,22 @@ public class HelloWorld {
         glEnable(GL_TEXTURE_2D);
 
         // Crear entidades
-        entities = new ArrayList<>();
-        entitiesNo = new ArrayList<>();
-        entitiesNo.add(new EntityNoMove(1L, 10, 100, 20, 20, 1.0f, 1.0f, 1.0f)); // Verde
 
-        entitiesNo.add(new EntityNoMove(2L,10, 160, 20, 20, 1.0f, 1.0f, 1.0f)); // Rojo
+        System.out.println(mapa);
 
-        entity.setId(0L);
+        for (Integer i = 0; i < mapa.length; i++) {
+            for (Integer j = 0; j < mapa[i].length; j++) {
+                if (!mapa[i][j].equals("aire")) entitiesNo.add(new EntityNoMove(Integer.parseInt(i.toString() + j.toString()), j * 20, i * 20, 20, 20, 1.0f, 1.0f, 1.0f, mapa[i][j]));
+            }
+        }
+
+        entity.setId(-1);
         entity.setR(1.0f);
         entity.setG(1.0f);
         entity.setB(1.0f);
         entity.setX(0.0f);
         entity.setY(0.0f);
-        entity.setHeight(20);
+        entity.setHeight(40);
         entity.setWidth(20);
 
         try {
@@ -177,8 +196,6 @@ public class HelloWorld {
             velocidadVertical += GRAVEDAD * deltaTime;
             posicionY -= velocidadVertical * deltaTime;
 
-
-
             float prevX = entity.getX();
             float prevY = entity.getY();
 
@@ -190,41 +207,31 @@ public class HelloWorld {
 
                 col = entity.isColliding(noMove);
 
-                //                if (entity.getCollisionTop() != null) {
-//                    if (entity.getCollisionTop().getId().equals(noMove.getId())) entity.setCol(entity.isColliding(noMove));
-//                }
-//                if (entity.getCollisionLeft() != null) {
-//                    if (entity.getCollisionLeft().getId().equals(noMove.getId())) entity.setCol(entity.isColliding(noMove));
-//                }
-//                if (entity.getCollisionRight() != null) {
-//                    if (entity.getCollisionRight().getId().equals(noMove.getId())) entity.setCol(entity.isColliding(noMove));
-//                }
-
-
-
                 switch (col) {
                     case -2: // botton
-                        //entity.position(entity.getX(), noMove.getY() - noMove.getHeight());
+                        saltos = 0;
+                        entity.position(entity.getX(), noMove.getY() - entity.getHeight());
                         entity.CollisionBottom(true, noMove.getId());
                         break;
                     case 2: // top
                         entity.CollisionTop(true, noMove.getId());
-                        entity.position(entity.getX(), noMove.getY());
+                        entity.position(entity.getX(), noMove.getY() + noMove.getHeight());
 //                        entity.move(0, -30);
-                        velocidadVertical = -20;
+                        velocidadVertical = -10;
                         break;
                     case -1: // left
-                        entity.position(noMove.getX() + noMove.getWidth(), entity.getY());
+                        //saltos = 0;
+                        entity.position(noMove.getX() + entity.getWidth() + 1, entity.getY());
                         entity.CollisionLeft(true, noMove.getId());
                         break;
                     case 1: // right
-                        entity.position(noMove.getX() - entity.getWidth(), entity.getY());
+                        //saltos = 0;
+                        entity.position(noMove.getX() - entity.getWidth() - 1, entity.getY());
                         entity.CollisionRight(true, noMove.getId());
                         break;
                     case 0:
-                        if (entity.getCollisionBottom().getId().equals(noMove.getId())) entity.CollisionBottom(false, noMove.getId());
+                        if (entity.getCollisionBottom().getId() == noMove.getId() && entity.isColliding(noMove) != -2) entity.CollisionBottom(false, noMove.getId());
                         break;
-
                 }
 
                 if (entity.getCollisionBottom().isStatus()) {
@@ -233,12 +240,12 @@ public class HelloWorld {
             }
 
             // Actualizar la posición de la entidad
-            if (upPressed) {
-                velocidadVertical = FUERZA_SALTO;
-                posicionY -= velocidadVertical * deltaTime;
-                entity.setY(posicionY);
-                entity.CollisionBottom(false, 1L);
-            }
+//            if (upPressed) {
+//                velocidadVertical = FUERZA_SALTO;
+//                posicionY -= velocidadVertical * deltaTime;
+//                entity.setY(posicionY);
+//                entity.CollisionBottom(false, 1L);
+//            }
             //if (downPressed) entity.move(0, 1);
             if (leftPressed) entity.move(-1, 0); entity.move(0, 0);
             if (rightPressed) entity.move(1, 0); entity.move(0, 0);
@@ -256,7 +263,7 @@ public class HelloWorld {
         }
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         new HelloWorld(new Entity(0, 0, 50, 50, 1.0f, 1.0f, 1.0f)).run();
     }
 

@@ -34,7 +34,7 @@ public class HelloWorld {
     Integer H_SCREEN = 900;
 
     // Constante de gravedad y fuerza de salto
-    final float GRAVEDAD = -18f; //-9.8f;
+    final float GRAVEDAD = -20f; //-9.8f;
     final float FUERZA_SALTO = 37.0f;
 
     // Variables del objeto
@@ -221,12 +221,12 @@ public class HelloWorld {
                         break;
                     case -1: // left
                         //saltos = 0;
-                        entity.position(noMove.getX() + entity.getWidth() + 1, entity.getY());
+                        entity.position(noMove.getX() + entity.getWidth() , entity.getY());
                         entity.CollisionLeft(true, noMove.getId());
                         break;
                     case 1: // right
                         //saltos = 0;
-                        entity.position(noMove.getX() - entity.getWidth() - 1, entity.getY());
+                        entity.position(noMove.getX() - entity.getWidth() , entity.getY());
                         entity.CollisionRight(true, noMove.getId());
                         break;
                     case 0:

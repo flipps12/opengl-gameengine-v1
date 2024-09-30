@@ -2,16 +2,26 @@ package org.example;
 
 import org.json.JSONObject;
 
+import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 public class MapLoader {
-    public static JSONObject loadMap(String filePath) throws Exception {
-        String content = new String(Files.readAllBytes(Paths.get(filePath)));
-        return new JSONObject(content);
+
+    public static JSONObject loadMap(String resourcePath) throws Exception {
+        System.out.println(resourcePath); // arreglar errror
+        try (InputStream inputStream = MapLoader.class.getResourceAsStream("/mapas/maps.json")) {
+            if (inputStream == null) {
+                throw new FileNotFoundException("Resource not found: " + resourcePath);
+            }
+            byte[] bytes = inputStream.readAllBytes();
+            String content = new String(bytes, StandardCharsets.UTF_8);
+            return new JSONObject(content);
+        }
     }
 
     public static String[][] convertToArray(JSONArray jsonArray) {
@@ -33,9 +43,8 @@ public class MapLoader {
         return array;
     }
 
-
     public static void main(String[] args) throws Exception {
-        JSONArray mapa = loadMap("src/main/resources/mapas/maps.json").getJSONArray("mapa1");
+        JSONArray mapa = loadMap("").getJSONArray("mapa1");
         String[][] array = convertToArray(mapa);
 
         // Imprimir el array para verificar

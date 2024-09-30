@@ -8,11 +8,9 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.nio.IntBuffer;
 
 import static org.lwjgl.opengl.ARBInternalformatQuery2.GL_TEXTURE_2D;
 import static org.lwjgl.opengl.GL11C.*;
-import static org.lwjgl.opengl.GL30C.glGenerateMipmap;
 
 public class TextureLoader {
     private static final int BYTES_PER_PIXEL = 4;//3 for RGB, 4 for RGBA
@@ -67,6 +65,28 @@ public class TextureLoader {
             e.printStackTrace();
             return null;
         }
+    }
+
+    public static BufferedImage[] splitImage(BufferedImage image, int tileWidth, int tileHeight) {
+        int cols = image.getWidth() / tileWidth;
+        int rows = image.getHeight() / tileHeight;
+        BufferedImage[] tiles = new BufferedImage[cols * rows];
+
+        for (int y = 0; y < rows; y++) {
+            for (int x = 0; x < cols; x++) {
+                tiles[y * cols + x] = image.getSubimage(x * tileWidth, y * tileHeight, tileWidth, tileHeight);
+            }
+        }
+
+        return tiles;
+    }
+
+    public static int[] loadTextures(BufferedImage[] tiles) {
+        int[] textureIDs = new int[tiles.length];
+        for (int i = 0; i < tiles.length; i++) {
+            textureIDs[i] = loadTexture(tiles[i]);
+        }
+        return textureIDs;
     }
 
 }

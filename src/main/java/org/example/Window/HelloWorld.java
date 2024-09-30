@@ -30,9 +30,14 @@ public class HelloWorld {
 
     private final Entity entity;
 
+
+    //Entity entity2 = new Entity(10, 10, 32, 32, 1.0f, 1.0f, 1.0f);
+
     Integer W_SCREEN = 1800;
     Integer H_SCREEN = 900;
 
+    float textureScaleX = 2.5f;
+    float textureScaleY = 2.0f;
     // Constante de gravedad y fuerza de salto
     final float GRAVEDAD = -20f; //-9.8f;
     final float FUERZA_SALTO = 37.0f;
@@ -50,7 +55,7 @@ public class HelloWorld {
     // The window handle
     private long window;
     private List<EntityNoMove> entitiesNo;
-    private boolean upPressed, downPressed, leftPressed, rightPressed;
+    private boolean upPressed, downPressed, leftPressed, rightPressed, animationInProcess;
 
     public void run() throws Exception {
         System.out.println("Hello LWJGL " + Version.getVersion() + "!");
@@ -87,26 +92,58 @@ public class HelloWorld {
         if (window == NULL)
             throw new RuntimeException("Failed to create the GLFW window");
 
+        glfwSetMouseButtonCallback(window, (window, button, action, mods) -> {
+            switch (button) {
+                case GLFW_MOUSE_BUTTON_LEFT:
+                    if (action == GLFW_PRESS) {
+                        try {
+                            entity.initAnimation("/shaders/_Attack.png", 120, 80, 120);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    break;
+            }
+        });
+
         glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
             boolean isPressed = action != GLFW_RELEASE;
             switch (key) {
                 case GLFW_KEY_SPACE:
-                    if (saltos > 2) break;
-                    upPressed = isPressed;
-                    velocidadVertical = FUERZA_SALTO;
-                    posicionY -= velocidadVertical * deltaTime;
-                    entity.setY(posicionY);
-                    entity.CollisionBottom(false, 1);
-                    saltos++;
+                    if (saltos < 2 && action == GLFW_PRESS) {
+                        velocidadVertical = FUERZA_SALTO;
+                        posicionY -= velocidadVertical * deltaTime;
+                        //entity.setY(posicionY);
+                        entity.CollisionBottom(false, 1);
+                        saltos++;
+                    }
                     break;
                 case GLFW_KEY_S:
                     downPressed = isPressed;
                     break;
                 case GLFW_KEY_A:
                     leftPressed = isPressed;
+                    try {
+                        if (isPressed && !animationInProcess) {
+                            entity.initAnimation("/shaders/_Run.png", 120, 80, 100);
+                            animationInProcess = true;
+                        } else  if (!isPressed && animationInProcess) {
+                            entity.initAnimation("/shaders/_Idle.png", 120, 80, 100);
+                            animationInProcess = false;
+                        }
+                    } catch (IOException e) {throw new RuntimeException(e);}
                     break;
                 case GLFW_KEY_D:
                     rightPressed = isPressed;
+                    try {
+                        if (isPressed && !animationInProcess) {
+                            entity.initAnimation("/shaders/_Run.png", 120, 80, 100);
+                            animationInProcess = true;
+                        } else  if (!isPressed && animationInProcess) {
+                            entity.initAnimation("/shaders/_Idle.png", 120, 80, 100);
+                            animationInProcess = false;
+                        }
+                    } catch (IOException e) {throw new RuntimeException(e);}
                     break;
                 case GLFW_KEY_ESCAPE:
                     if (action == GLFW_RELEASE) {
@@ -143,11 +180,10 @@ public class HelloWorld {
         glOrtho(0, 400, 200, 0, -1, 1); // Ajustar según el tamaño de tu ventana
         glMatrixMode(GL_MODELVIEW);
         glEnable(GL_TEXTURE_2D);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        // Crear entidades
-
-        System.out.println(mapa);
-
+        // Mapa
         for (Integer i = 0; i < mapa.length; i++) {
             for (Integer j = 0; j < mapa[i].length; j++) {
                 if (!mapa[i][j].equals("aire")) entitiesNo.add(new EntityNoMove(Integer.parseInt(i.toString() + j.toString()), j * 20, i * 20, 20, 20, 1.0f, 1.0f, 1.0f, mapa[i][j]));
@@ -162,6 +198,14 @@ public class HelloWorld {
         entity.setY(0.0f);
         entity.setHeight(40);
         entity.setWidth(20);
+
+
+        entity.CollisionBottom(false, 1);
+        entity.CollisionTop(false, 1);
+        entity.CollisionLeft(false, 1);
+        entity.CollisionRight(false, 1);
+
+        entity.initAnimation("/shaders/_Idle.png", 120, 80, 100); // 100 ms por fotograma
 
         try {
             for (EntityNoMove entityNo : entitiesNo) {
@@ -196,6 +240,10 @@ public class HelloWorld {
             velocidadVertical += GRAVEDAD * deltaTime;
             posicionY -= velocidadVertical * deltaTime;
 
+            if (entity.getCollisionBottom().isStatus()) {
+                velocidadVertical = 0;
+                posicionY = entity.getY();
+            } else entity.setY(posicionY);
             float prevX = entity.getX();
             float prevY = entity.getY();
 
@@ -230,30 +278,29 @@ public class HelloWorld {
                         entity.CollisionRight(true, noMove.getId());
                         break;
                     case 0:
-                        if (entity.getCollisionBottom().getId() == noMove.getId() && entity.isColliding(noMove) != -2) entity.CollisionBottom(false, noMove.getId());
+                        if (entity.getCollisionBottom().getId() == noMove.getId() && entity.isColliding(noMove) != -2) {
+                            entity.CollisionBottom(false, noMove.getId());
+                        }
                         break;
                 }
-
-                if (entity.getCollisionBottom().isStatus()) {
-                    velocidadVertical = 0;
-                } else entity.setY(posicionY);
             }
 
-            // Actualizar la posición de la entidad
-//            if (upPressed) {
-//                velocidadVertical = FUERZA_SALTO;
-//                posicionY -= velocidadVertical * deltaTime;
-//                entity.setY(posicionY);
-//                entity.CollisionBottom(false, 1L);
-//            }
-            //if (downPressed) entity.move(0, 1);
-            if (leftPressed) entity.move(-1, 0); entity.move(0, 0);
-            if (rightPressed) entity.move(1, 0); entity.move(0, 0);
+            if (leftPressed) {
+                entity.move(-1, 0);
+                entity.setFlip(true);
+            }
+            if (rightPressed) {
+                entity.move(1, 0);
+                entity.setFlip(false);
+            }
 
             for (EntityNoMove entityNo : entitiesNo) {
                 entityNo.render();
             }
-            entity.render();
+
+            entity.render(entity.getX(), entity.getY(), entity.getWidth(), entity.getHeight(), textureScaleX, textureScaleY);
+            entity.update();
+
             glfwSwapBuffers(window); // swap the color buffers
 
             // Poll for window events. The key callback above will only be
@@ -261,10 +308,6 @@ public class HelloWorld {
             glfwPollEvents();
 
         }
-    }
-
-    public static void main(String[] args) throws Exception {
-        new HelloWorld(new Entity(0, 0, 50, 50, 1.0f, 1.0f, 1.0f)).run();
     }
 
 }

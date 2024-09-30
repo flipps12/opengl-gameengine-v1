@@ -1,10 +1,11 @@
 package org.example.entities;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import org.example.TextureLoader;
 
-import java.util.List;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -20,6 +21,12 @@ public class Entity {
     private CollisionData CollisionLeft;
     private CollisionData CollisionTop;
     private CollisionData CollisionBottom;
+    private int[] textureIDs;
+    private int currentFrame;
+    private long lastFrameTime;
+    private long frameDuration; // Duración de cada fotograma en milisegundos
+    private boolean flip;
+
 
     Integer col = 0;
 
@@ -32,6 +39,48 @@ public class Entity {
         this.g = g;
         this.b = b;
     }
+
+
+    public void initAnimation(String imagePath, int tileWidth, int tileHeight, long frameDuration) throws IOException {
+        BufferedImage image = TextureLoader.loadImage(imagePath);
+        BufferedImage[] tiles = TextureLoader.splitImage(image, tileWidth, tileHeight);
+        this.textureIDs = TextureLoader.loadTextures(tiles);
+        this.frameDuration = frameDuration;
+        this.currentFrame = 0;
+        this.lastFrameTime = System.currentTimeMillis();
+    }
+
+    public void update() {
+        long currentTime = System.currentTimeMillis();
+        if (currentTime - lastFrameTime >= frameDuration) {
+            currentFrame = (currentFrame + 1) % textureIDs.length;
+            lastFrameTime = currentTime;
+        }
+    }
+
+    public void render(float x, float y, float width, float height, float scaleX, float sclaeY) {
+        glBindTexture(GL_TEXTURE_2D, textureIDs[currentFrame]);
+
+        float scaledWidth = width * scaleX;
+        float scaledHeight = height * sclaeY;
+
+        // Ajustar la posición para que la textura se escale hacia arriba
+        float offsetX = (width - scaledWidth) / 2;
+        float offsetY = height - scaledHeight;
+
+        glBegin(GL_QUADS);
+        glTexCoord2f(flip ? 1 : 0, 0); glVertex2f(x + offsetX, y + offsetY); // 1 0 // 0 0
+        glTexCoord2f(flip ? 0 : 1, 0); glVertex2f(x + offsetX + scaledWidth, y + offsetY); // 0 0 // 1 0
+        glTexCoord2f(flip ? 0 : 1, 1); glVertex2f(x + offsetX + scaledWidth, y + height); // 0 1 // 1 1
+        glTexCoord2f(flip ? 1 : 0, 1); glVertex2f(x + offsetX, y + height); // 1 1 // 0 1
+        glEnd();
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
+
+
+
+
 
     public void render() {
         // Dibujar el relleno de la entidad

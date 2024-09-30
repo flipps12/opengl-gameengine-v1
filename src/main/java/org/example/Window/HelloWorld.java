@@ -36,7 +36,7 @@ public class HelloWorld {
     Integer W_SCREEN = 1800;
     Integer H_SCREEN = 900;
 
-    float textureScaleX = 2.5f;
+    float textureScaleX = 4.3f;
     float textureScaleY = 2.0f;
     // Constante de gravedad y fuerza de salto
     final float GRAVEDAD = -20f; //-9.8f;
@@ -97,7 +97,16 @@ public class HelloWorld {
                 case GLFW_MOUSE_BUTTON_LEFT:
                     if (action == GLFW_PRESS) {
                         try {
-                            entity.initAnimation("/shaders/_Attack.png", 120, 80, 120);
+                            entity.initAnimation("/shaders/_AttackNoMovement.png", 120, 80, 120);
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    break;
+                case GLFW_MOUSE_BUTTON_RIGHT:
+                    if (action == GLFW_PRESS) {
+                        try {
+                            entity.initAnimation("/shaders/_Attack2.png", 120, 80, 120);
                         } catch (IOException e) {
                             throw new RuntimeException(e);
                         }
@@ -110,40 +119,28 @@ public class HelloWorld {
             boolean isPressed = action != GLFW_RELEASE;
             switch (key) {
                 case GLFW_KEY_SPACE:
-                    if (saltos < 2 && action == GLFW_PRESS) {
-                        velocidadVertical = FUERZA_SALTO;
-                        posicionY -= velocidadVertical * deltaTime;
-                        //entity.setY(posicionY);
-                        entity.CollisionBottom(false, 1);
-                        saltos++;
-                    }
+                    try {
+                        if (saltos < 2 && action == GLFW_PRESS) {
+                            velocidadVertical = FUERZA_SALTO;
+                            posicionY -= velocidadVertical * deltaTime;
+                            //entity.setY(posicionY);
+                            entity.CollisionBottom(false, 1);
+                            saltos++;
+                            entity.initAnimation("/shaders/_Jump.png", 120, 80, 100);
+                            animationInProcess = true;
+                        } else if (!isPressed && animationInProcess) {
+                            animationInProcess = false;
+                        }
+                    } catch (IOException e) {throw new RuntimeException(e);}
                     break;
                 case GLFW_KEY_S:
                     downPressed = isPressed;
                     break;
                 case GLFW_KEY_A:
                     leftPressed = isPressed;
-                    try {
-                        if (isPressed && !animationInProcess) {
-                            entity.initAnimation("/shaders/_Run.png", 120, 80, 100);
-                            animationInProcess = true;
-                        } else  if (!isPressed && animationInProcess) {
-                            entity.initAnimation("/shaders/_Idle.png", 120, 80, 100);
-                            animationInProcess = false;
-                        }
-                    } catch (IOException e) {throw new RuntimeException(e);}
                     break;
                 case GLFW_KEY_D:
                     rightPressed = isPressed;
-                    try {
-                        if (isPressed && !animationInProcess) {
-                            entity.initAnimation("/shaders/_Run.png", 120, 80, 100);
-                            animationInProcess = true;
-                        } else  if (!isPressed && animationInProcess) {
-                            entity.initAnimation("/shaders/_Idle.png", 120, 80, 100);
-                            animationInProcess = false;
-                        }
-                    } catch (IOException e) {throw new RuntimeException(e);}
                     break;
                 case GLFW_KEY_ESCAPE:
                     if (action == GLFW_RELEASE) {
@@ -244,6 +241,12 @@ public class HelloWorld {
                 velocidadVertical = 0;
                 posicionY = entity.getY();
             } else entity.setY(posicionY);
+
+            if (!entity.getCollisionBottom().isStatus() && !animationInProcess) {
+                entity.initAnimation("/shaders/_Fall.png", 120, 80, 100);
+            } else if (!animationInProcess) {
+                entity.initAnimation("/shaders/_Idle.png", 120, 80, 100);
+            }
             float prevX = entity.getX();
             float prevY = entity.getY();
 
@@ -285,13 +288,31 @@ public class HelloWorld {
                 }
             }
 
-            if (leftPressed) {
+            if (entity.getCollisionBottom().isStatus() && !leftPressed && !rightPressed) {
+                try {
+                    entity.initAnimation("/shaders/_Idle.png", 120, 80, 100);
+                    animationInProcess = false;
+                } catch (IOException e) {throw new RuntimeException(e);}
+            }
+            if (leftPressed  && !rightPressed) {
                 entity.move(-1, 0);
                 entity.setFlip(true);
+                try {
+                    if (!animationInProcess && !rightPressed && entity.getCollisionBottom().isStatus()) {
+                        entity.initAnimation("/shaders/_Run.png", 120, 80, 100);
+                        animationInProcess = true;
+                    }
+                } catch (IOException e) {throw new RuntimeException(e);}
             }
             if (rightPressed) {
                 entity.move(1, 0);
                 entity.setFlip(false);
+                try {
+                    if (!animationInProcess && !leftPressed && entity.getCollisionBottom().isStatus()) {
+                        entity.initAnimation("/shaders/_Run.png", 120, 80, 100);
+                        animationInProcess = true;
+                    }
+                } catch (IOException e) {throw new RuntimeException(e);}
             }
 
             for (EntityNoMove entityNo : entitiesNo) {

@@ -13,7 +13,7 @@ import java.nio.charset.StandardCharsets;
 public class MapLoader {
 
     public static JSONObject loadMap(String resourcePath) throws Exception {
-        System.out.println(resourcePath); // arreglar errror
+        // System.out.println(resourcePath); // arreglar errror
         try (InputStream inputStream = MapLoader.class.getResourceAsStream("/mapas/maps.json")) {
             if (inputStream == null) {
                 throw new FileNotFoundException("Resource not found: " + resourcePath);

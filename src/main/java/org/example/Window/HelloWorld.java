@@ -2,6 +2,7 @@ package org.example.Window;
 
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import org.example.GameState;
 import org.example.MapLoader;
 import org.example.entities.Entity;
 import org.example.entities.EntityNoMove;
@@ -16,6 +17,7 @@ import java.lang.reflect.Array;
 import java.nio.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.lwjgl.glfw.Callbacks.*;
 import static org.lwjgl.glfw.GLFW.*;
@@ -29,28 +31,25 @@ import static org.lwjgl.system.MemoryUtil.*;
 public class HelloWorld {
 
     private final Entity entity;
-
-
-    //Entity entity2 = new Entity(10, 10, 32, 32, 1.0f, 1.0f, 1.0f);
+    private static final GameState gameState = new GameState();
 
     Integer W_SCREEN = 1800;
     Integer H_SCREEN = 900;
 
+
+    // Gravedad y Fisica
+    final float GRAVEDAD = -0.03f; //-9.8f;
+    float posicionY;
+    float velocidadVertical = 0;
+
+    final int TARGET_FPS = 60;
+    final long OPTIMAL_TIME = 400000000 / TARGET_FPS; // Nanosegundos por frame
+
+    // Jugador config
     float textureScaleX = 4.3f;
     float textureScaleY = 2.0f;
-    // Constante de gravedad y fuerza de salto
-    final float GRAVEDAD = -20f; //-9.8f;
-    final float FUERZA_SALTO = 37.0f;
-
-    // Variables del objeto
-    float posicionY = 0;
-    float velocidadVertical = -10;
-
-
-    float deltaTime = 0.032f; // Supongamos 60 FPS 0.016
-
-    // pj config
     int saltos = 0;
+    final float FUERZA_SALTO = 2.0f;
 
     // The window handle
     private long window;
@@ -58,7 +57,7 @@ public class HelloWorld {
     private boolean upPressed, downPressed, leftPressed, rightPressed, animationInProcess;
 
     public void run() throws Exception {
-        System.out.println("Hello LWJGL " + Version.getVersion() + "!");
+        System.out.println("LWJGL " + Version.getVersion() + "!");
 
         init();
         loop();
@@ -69,8 +68,7 @@ public class HelloWorld {
 
         // Terminate GLFW and free the error callback
         glfwTerminate();
-        glfwSetErrorCallback(null).free();
-
+        Objects.requireNonNull(glfwSetErrorCallback(null)).free(); // glfwSetErrorCallback(null).free();
     }
 
     private void init() throws Exception {
@@ -117,12 +115,13 @@ public class HelloWorld {
 
         glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
             boolean isPressed = action != GLFW_RELEASE;
+            double delta = gameState.getDelta();
             switch (key) {
                 case GLFW_KEY_SPACE:
                     try {
                         if (saltos < 2 && action == GLFW_PRESS) {
                             velocidadVertical = FUERZA_SALTO;
-                            posicionY -= velocidadVertical * deltaTime;
+                            posicionY -= (float) (velocidadVertical * delta);
                             //entity.setY(posicionY);
                             entity.CollisionBottom(false, 1);
                             saltos++;
@@ -185,14 +184,15 @@ public class HelloWorld {
             for (Integer j = 0; j < mapa[i].length; j++) {
                 if (!mapa[i][j].equals("aire")) entitiesNo.add(new EntityNoMove(Integer.parseInt(i.toString() + j.toString()), j * 20, i * 20, 20, 20, 1.0f, 1.0f, 1.0f, mapa[i][j]));
             }
+            posicionY = i * 20 - 40;
+            entity.setY(posicionY - 20);
         }
 
         entity.setId(-1);
         entity.setR(1.0f);
         entity.setG(1.0f);
         entity.setB(1.0f);
-        entity.setX(0.0f);
-        entity.setY(0.0f);
+        entity.setX(190.0f);
         entity.setHeight(40);
         entity.setWidth(20);
 
@@ -217,7 +217,6 @@ public class HelloWorld {
         }, 0);
     }
 
-
     private void loop() throws IOException {
         // This line is critical for LWJGL's interoperation with GLFW's
         // OpenGL context, or any context that is managed externally.
@@ -229,13 +228,25 @@ public class HelloWorld {
         // Set the clear color
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
+        long lastLoopTime = System.nanoTime();
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
         while ( !glfwWindowShouldClose(window) ) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear the framebuffer
 
-            velocidadVertical += GRAVEDAD * deltaTime;
-            posicionY -= velocidadVertical * deltaTime;
+            float camY = 120 - entity.getY();
+
+            long now = System.nanoTime();
+            long updateLength = now - lastLoopTime;
+
+            lastLoopTime = now;
+
+            double delta = updateLength / ((double) OPTIMAL_TIME);
+            gameState.setDelta(delta);
+
+
+            velocidadVertical += (float) (GRAVEDAD * delta);
+            posicionY -= (float) (velocidadVertical * delta);
 
             if (entity.getCollisionBottom().isStatus()) {
                 velocidadVertical = 0;
@@ -247,8 +258,6 @@ public class HelloWorld {
             } else if (!animationInProcess) {
                 entity.initAnimation("/shaders/_Idle.png", 120, 80, 100);
             }
-            float prevX = entity.getX();
-            float prevY = entity.getY();
 
             // Detectar colisiones
             for (EntityNoMove noMove : entitiesNo) {
@@ -267,16 +276,13 @@ public class HelloWorld {
                     case 2: // top
                         entity.CollisionTop(true, noMove.getId());
                         entity.position(entity.getX(), noMove.getY() + noMove.getHeight());
-//                        entity.move(0, -30);
-                        velocidadVertical = -10;
+                        velocidadVertical = -1;
                         break;
                     case -1: // left
-                        //saltos = 0;
                         entity.position(noMove.getX() + entity.getWidth() , entity.getY());
                         entity.CollisionLeft(true, noMove.getId());
                         break;
                     case 1: // right
-                        //saltos = 0;
                         entity.position(noMove.getX() - entity.getWidth() , entity.getY());
                         entity.CollisionRight(true, noMove.getId());
                         break;
@@ -319,15 +325,25 @@ public class HelloWorld {
                 entityNo.render();
             }
 
+            glLoadIdentity();
+            glTranslatef(0, camY, 0);
             entity.render(entity.getX(), entity.getY(), entity.getWidth(), entity.getHeight(), textureScaleX, textureScaleY);
             entity.update();
+
+            long sleepTime = (lastLoopTime - System.nanoTime() + OPTIMAL_TIME) / 1000000;
+            if (sleepTime > 0) {
+                try {
+                    Thread.sleep(sleepTime);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
 
             glfwSwapBuffers(window); // swap the color buffers
 
             // Poll for window events. The key callback above will only be
             // invoked during this call.
             glfwPollEvents();
-
         }
     }
 

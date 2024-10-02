@@ -11,11 +11,11 @@ import static org.lwjgl.opengl.GL11.*;
 
 @Setter
 @Getter
-public class Entity {
-    private int id;
+public class Player {
+    private int id = -1;
     private float x, y;
-    private float width, height;
-    private float r, g, b;
+    private float width = 20, height = 40;
+    private float r = 1.0f, g = 1.0f, b = 1.0f;
 
     private CollisionData CollisionRight;
     private CollisionData CollisionLeft;
@@ -30,7 +30,7 @@ public class Entity {
 
     Integer col = 0;
 
-    public Entity(float x, float y, float width, float height, float r, float g, float b) {
+    public Player(float x, float y, float width, float height, float r, float g, float b) {
         this.x = x;
         this.y = y;
         this.width = width;
@@ -58,7 +58,7 @@ public class Entity {
         }
     }
 
-    public void render(float x, float y, float width, float height, float scaleX, float sclaeY) {
+    public void render(float scaleX, float sclaeY) {
         glBindTexture(GL_TEXTURE_2D, textureIDs[currentFrame]);
 
         float scaledWidth = width * scaleX;

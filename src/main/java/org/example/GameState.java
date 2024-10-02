@@ -7,5 +7,8 @@ import lombok.Setter;
 @Setter
 public class GameState {
     private double delta;
+
+    // Gravedad y Fisica
+    final float GRAVEDAD = -0.03f; //-9.8f;
 }
 
